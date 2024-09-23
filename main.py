@@ -1,19 +1,26 @@
 import pygame
 import os
 import random
+
+# Khởi tạo pygame
 pygame.init()
 
+# Đặt chiều cao và chiều rộng của màn hình
 SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 1100
+
+# Tạo màn hình hiển thị
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Khủng long vượt ngàn chông gai")
 
+# Tải hình ảnh cho các trạng thái của nhân vật
 RUNNING = [pygame.image.load(os.path.join("Assets/Dino", "run1.png")),
            pygame.image.load(os.path.join("Assets/Dino", "run2.png"))]
 JUMPING = pygame.image.load(os.path.join("Assets/Dino", "jump.png"))
 DUCKING = [pygame.image.load(os.path.join("Assets/Dino", "duck.png")),
            pygame.image.load(os.path.join("Assets/Dino", "duck2.png"))]
 
+# Tải hình ảnh cho các chướng ngại vật
 SMALL_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "SmallCactus1.png")),
                 pygame.image.load(os.path.join("Assets/Cactus", "SmallCactus2.png")),
                 pygame.image.load(os.path.join("Assets/Cactus", "SmallCactus3.png"))]
@@ -24,16 +31,18 @@ LARGE_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus1.pn
 BIRD = [pygame.image.load(os.path.join("Assets/Bird", "Bird1.png")),
         pygame.image.load(os.path.join("Assets/Bird", "Bird2.png"))]
 
+# Tải hình ảnh cho đám mây
 CLOUD = pygame.image.load(os.path.join("Assets/Other", "Cloud.png"))
 
+# Tải hình nền mặt đất
 BG = pygame.image.load(os.path.join("Assets/Other", "Track.png"))
 
-#Hải đẹp trai
+# Lớp đại diện cho khủng long
 class Dinosaur:
-    X_POS = 80
-    Y_POS = 310
-    Y_POS_DUCK = 340
-    JUMP_VEL = 8.5
+    X_POS = 80  # Vị trí x của khủng long
+    Y_POS = 310  # Vị trí y khi chạy
+    Y_POS_DUCK = 340  # Vị trí y khi cúi
+    JUMP_VEL = 8.5  # Tốc độ nhảy
 
     def __init__(self):
         self.duck_img = DUCKING
@@ -94,14 +103,14 @@ class Dinosaur:
         if self.dino_jump:
             self.dino_rect.y -= self.jump_vel * 4
             self.jump_vel -= 0.8
-        if self.jump_vel < - self.JUMP_VEL:
+        if self.jump_vel < -self.JUMP_VEL:
             self.dino_jump = False
             self.jump_vel = self.JUMP_VEL
 
     def draw(self, SCREEN):
         SCREEN.blit(self.image, (self.dino_rect.x, self.dino_rect.y))
 
-#Ý và Ngheo Buyến
+# Lớp đại diện cho đám mây
 class Cloud:
     def __init__(self):
         self.x = SCREEN_WIDTH + random.randint(800, 1000)
@@ -118,7 +127,7 @@ class Cloud:
     def draw(self, SCREEN):
         SCREEN.blit(self.image, (self.x, self.y))
 
-#Nữ và số 1
+# Lớp đại diện cho chướng ngại vật
 class Obstacle:
     def __init__(self, image, type):
         self.image = image
@@ -134,21 +143,21 @@ class Obstacle:
     def draw(self, SCREEN):
         SCREEN.blit(self.image[self.type], self.rect)
 
-
+# Lớp đại diện cho xương rồng nhỏ
 class SmallCactus(Obstacle):
     def __init__(self, image):
         self.type = random.randint(0, 2)
         super().__init__(image, self.type)
         self.rect.y = 325
 
-
+# Lớp đại diện cho xương rồng lớn
 class LargeCactus(Obstacle):
     def __init__(self, image):
         self.type = random.randint(0, 2)
         super().__init__(image, self.type)
         self.rect.y = 300
 
-#Thoại và Vua
+# Lớp đại diện cho chim
 class Bird(Obstacle):
     def __init__(self, image):
         self.type = 0
@@ -159,10 +168,10 @@ class Bird(Obstacle):
     def draw(self, SCREEN):
         if self.index >= 9:
             self.index = 0
-        SCREEN.blit(self.image[self.index//5], self.rect)
+        SCREEN.blit(self.image[self.index // 5], self.rect)
         self.index += 1
 
-#Nhật Giàu
+# Hàm chính để chạy trò chơi
 def main():
     global game_speed, x_pos_bg, y_pos_bg, points, obstacles
     run = True
@@ -176,6 +185,7 @@ def main():
     font = pygame.font.Font('Roboto-bold.ttf', 20)
     obstacles = []
     death_count = 0
+    day_night_cycle = 0  # Biến để theo dõi chu kỳ ngày đêm
 
     def score():
         global points, game_speed
@@ -194,21 +204,31 @@ def main():
         SCREEN.blit(BG, (x_pos_bg, y_pos_bg))
         SCREEN.blit(BG, (image_width + x_pos_bg, y_pos_bg))
         if x_pos_bg <= -image_width:
-            SCREEN.blit(BG, (image_width + x_pos_bg, y_pos_bg))
             x_pos_bg = 0
         x_pos_bg -= game_speed
 
+    # Vòng lặp chính của trò chơi
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
 
-        SCREEN.fill((255, 255, 255))
+        # Thay đổi màu nền theo chu kỳ
+        if day_night_cycle % 2 == 0:
+            SCREEN.fill((255, 255, 255))  # Nền trắng (ban ngày)
+        else:
+            SCREEN.fill((0, 0, 0))  # Nền đen (ban đêm)
+
+        # Cập nhật chu kỳ ngày đêm dựa trên điểm số
+        if points >= 500:
+            day_night_cycle = (points // 500) % 2
+
         userInput = pygame.key.get_pressed()
 
         player.draw(SCREEN)
         player.update(userInput)
 
+        # Tạo chướng ngại vật ngẫu nhiên
         if len(obstacles) == 0:
             if random.randint(0, 2) == 0:
                 obstacles.append(SmallCactus(SMALL_CACTUS))
@@ -217,6 +237,7 @@ def main():
             elif random.randint(0, 2) == 2:
                 obstacles.append(Bird(BIRD))
 
+        # Cập nhật và vẽ chướng ngại vật
         for obstacle in obstacles:
             obstacle.draw(SCREEN)
             obstacle.update()
@@ -235,7 +256,7 @@ def main():
         clock.tick(30)
         pygame.display.update()
 
-
+# Hàm hiển thị menu
 def menu(death_count):
     global points
     run = True
@@ -251,10 +272,12 @@ def menu(death_count):
             scoreRect = score.get_rect()
             scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)
             SCREEN.blit(score, scoreRect)
+
         textRect = text.get_rect()
         textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
         SCREEN.blit(text, textRect)
         SCREEN.blit(RUNNING[0], (SCREEN_WIDTH // 2 - 20, SCREEN_HEIGHT // 2 - 140))
+
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -263,5 +286,5 @@ def menu(death_count):
             if event.type == pygame.KEYDOWN:
                 main()
 
-
+# Bắt đầu trò chơi
 menu(death_count=0)
