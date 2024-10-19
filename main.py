@@ -256,35 +256,93 @@ def main():
         clock.tick(30)
         pygame.display.update()
 
-# Hàm hiển thị menu
+# Hàm hiển thị menu trước và sau khi chơi
+# def menu(death_count):
+#     global points
+#     run = True
+#     while run:
+#         SCREEN.fill((255, 255, 255))  # Làm mới màn hình với màu trắng
+#         font = pygame.font.Font('Roboto-Bold.ttf', 30)  # Phông chữ cho menu
+
+#         # Nếu đây là lần chơi đầu tiên
+#         if death_count == 0:
+#             text = font.render("Nhấn phím bất kỳ để bắt đầu!", True, (0, 0, 0))
+#         # Nếu người chơi đã thua ít nhất 1 lần
+#         elif death_count > 0:
+#             text = font.render("Nhấn phím bất kỳ để chơi lại", True, (0, 0, 0))
+#             score = font.render("Điểm của bạn: " + str(points), True, (0, 0, 0))  # Hiển thị điểm
+#             scoreRect = score.get_rect()
+#             scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)  # Vị trí của điểm
+#             SCREEN.blit(score, scoreRect)
+
+#         # Vẽ thông báo trên màn hình
+#         textRect = text.get_rect()
+#         textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)  # Vị trí của thông báo
+#         SCREEN.blit(text, textRect)
+#         SCREEN.blit(RUNNING[0], (SCREEN_WIDTH // 2 - 20, SCREEN_HEIGHT // 2 - 140))  # Vẽ khủng long trên menu
+#         pygame.display.update()  # Cập nhật màn hình
+
+#         # Kiểm tra sự kiện
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:  # Thoát nếu nhấn nút thoát
+#                 pygame.quit()
+#                 run = False
+#             if event.type == pygame.KEYDOWN:  # Bắt đầu trò chơi nếu nhấn phím
+#                 main()
+# # Gọi menu với số lần chết ban đầu là 0
+# menu(death_count=0)
 def menu(death_count):
     global points
     run = True
-    while run:
-        SCREEN.fill((255, 255, 255))
-        font = pygame.font.Font('Roboto-Bold.ttf', 30)
+    button_start_rect = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 50, 200, 50)  # Nút bắt đầu
+    button_exit_rect = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 120, 200, 50)  # Nút thoát
 
+    while run:
+        SCREEN.fill((255, 255, 255))  # Làm mới màn hình với màu trắng
+        font = pygame.font.Font('Roboto-Bold.ttf', 30)  # Phông chữ cho menu
+
+        # Nếu đây là lần chơi đầu tiên
         if death_count == 0:
-            text = font.render("Nhấn phím bất kỳ để bắt đầu!", True, (0, 0, 0))
+            text = font.render("Thánh Long K'uhul Ajaw Toàn Năng!", True, (0, 0, 0))
+        # Nếu người chơi đã thua ít nhất 1 lần
         elif death_count > 0:
-            text = font.render("Nhấn phím bất kỳ để chơi lại", True, (0, 0, 0))
-            score = font.render("Điểm của bạn: " + str(points), True, (0, 0, 0))
+            text = font.render("Nhấn nút bên dưới để chơi lại", True, (0, 0, 0))
+            score = font.render("Điểm của bạn: " + str(points), True, (0, 0, 0))  # Hiển thị điểm
             scoreRect = score.get_rect()
-            scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)
+            scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 40)  # Vị trí của điểm
             SCREEN.blit(score, scoreRect)
 
+        # Vẽ thông báo trên màn hình
         textRect = text.get_rect()
-        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)  # Vị trí của thông báo
         SCREEN.blit(text, textRect)
-        SCREEN.blit(RUNNING[0], (SCREEN_WIDTH // 2 - 20, SCREEN_HEIGHT // 2 - 140))
 
-        pygame.display.update()
+        # Vẽ nút "Bắt đầu"
+        pygame.draw.rect(SCREEN, (0, 150, 0), button_start_rect)  # Vẽ hình chữ nhật cho nút
+        button_start_text = font.render("Bắt đầu", True, (255, 255, 255))  # Văn bản cho nút
+        button_start_text_rect = button_start_text.get_rect(center=button_start_rect.center)  # Vị trí văn bản
+        SCREEN.blit(button_start_text, button_start_text_rect)
+
+        # Vẽ nút "Thoát"
+        pygame.draw.rect(SCREEN, (150, 0, 0), button_exit_rect)  # Vẽ hình chữ nhật cho nút thoát
+        button_exit_text = font.render("Thoát", True, (255, 255, 255))  # Văn bản cho nút thoát
+        button_exit_text_rect = button_exit_text.get_rect(center=button_exit_rect.center)  # Vị trí văn bản
+        SCREEN.blit(button_exit_text, button_exit_text_rect)
+
+        SCREEN.blit(RUNNING[0], (SCREEN_WIDTH // 2 - 40, SCREEN_HEIGHT // 2 - 140))  # Vẽ khủng long trên menu
+        pygame.display.update()  # Cập nhật màn hình
+
+        # Kiểm tra sự kiện
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT:  # Thoát nếu nhấn nút thoát
                 pygame.quit()
                 run = False
-            if event.type == pygame.KEYDOWN:
-                main()
+            if event.type == pygame.MOUSEBUTTONDOWN:  # Kiểm tra nhấn chuột
+                if button_start_rect.collidepoint(event.pos):  # Bắt đầu trò chơi nếu nhấn nút bắt đầu
+                    main()
+                elif button_exit_rect.collidepoint(event.pos):  # Thoát trò chơi nếu nhấn nút thoát
+                    pygame.quit()
+                    run = False
 
-# Bắt đầu trò chơi
+# Gọi menu với số lần chết ban đầu là 0
 menu(death_count=0)
