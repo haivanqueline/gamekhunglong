@@ -1,6 +1,7 @@
 import pygame
 import os
 import random
+
 pygame.init()
 
 SCREEN_HEIGHT = 600
@@ -28,12 +29,12 @@ CLOUD = pygame.image.load(os.path.join("Assets/Other", "Cloud.png"))
 
 BG = pygame.image.load(os.path.join("Assets/Other", "Track.png"))
 
-#Hải đẹp trai
 class Dinosaur:
     X_POS = 80
-    Y_POS = 310
-    Y_POS_DUCK = 340
+    Y_POS = 305
+    Y_POS_DUCK = 330
     JUMP_VEL = 8.5
+    MOVE_VEL = 5
 
     def __init__(self):
         self.duck_img = DUCKING
@@ -75,18 +76,19 @@ class Dinosaur:
             self.dino_run = True
             self.dino_jump = False
 
+        if userInput[pygame.K_LEFT]:
+            self.dino_rect.x -= self.MOVE_VEL
+        if userInput[pygame.K_RIGHT]:
+            self.dino_rect.x += self.MOVE_VEL
+
     def duck(self):
         self.image = self.duck_img[self.step_index // 5]
-        self.dino_rect = self.image.get_rect()
-        self.dino_rect.x = self.X_POS
-        self.dino_rect.y = self.Y_POS_DUCK
+        self.dino_rect.y = self.Y_POS_DUCK 
         self.step_index += 1
 
     def run(self):
         self.image = self.run_img[self.step_index // 5]
-        self.dino_rect = self.image.get_rect()
-        self.dino_rect.x = self.X_POS
-        self.dino_rect.y = self.Y_POS
+        self.dino_rect.y = self.Y_POS  
         self.step_index += 1
 
     def jump(self):
@@ -94,14 +96,13 @@ class Dinosaur:
         if self.dino_jump:
             self.dino_rect.y -= self.jump_vel * 4
             self.jump_vel -= 0.8
-        if self.jump_vel < - self.JUMP_VEL:
+        if self.jump_vel < -self.JUMP_VEL:
             self.dino_jump = False
             self.jump_vel = self.JUMP_VEL
 
     def draw(self, SCREEN):
         SCREEN.blit(self.image, (self.dino_rect.x, self.dino_rect.y))
 
-#Ý và Ngheo Buyến
 class Cloud:
     def __init__(self):
         self.x = SCREEN_WIDTH + random.randint(800, 1000)
@@ -118,7 +119,6 @@ class Cloud:
     def draw(self, SCREEN):
         SCREEN.blit(self.image, (self.x, self.y))
 
-#Nữ và số 1
 class Obstacle:
     def __init__(self, image, type):
         self.image = image
@@ -134,13 +134,11 @@ class Obstacle:
     def draw(self, SCREEN):
         SCREEN.blit(self.image[self.type], self.rect)
 
-
 class SmallCactus(Obstacle):
     def __init__(self, image):
         self.type = random.randint(0, 2)
         super().__init__(image, self.type)
         self.rect.y = 325
-
 
 class LargeCactus(Obstacle):
     def __init__(self, image):
@@ -148,7 +146,6 @@ class LargeCactus(Obstacle):
         super().__init__(image, self.type)
         self.rect.y = 300
 
-#Thoại và Vua
 class Bird(Obstacle):
     def __init__(self, image):
         self.type = 0
@@ -162,7 +159,6 @@ class Bird(Obstacle):
         SCREEN.blit(self.image[self.index//5], self.rect)
         self.index += 1
 
-#Nhật Giàu
 def main():
     global game_speed, x_pos_bg, y_pos_bg, points, obstacles
     run = True
@@ -171,11 +167,12 @@ def main():
     cloud = Cloud()
     game_speed = 20
     x_pos_bg = 0
-    y_pos_bg = 380
+    y_pos_bg = 370
     points = 0
     font = pygame.font.Font('Roboto-bold.ttf', 20)
     obstacles = []
     death_count = 0
+    day_night_cycle = 0
 
     def score():
         global points, game_speed
@@ -183,7 +180,7 @@ def main():
         if points % 100 == 0:
             game_speed += 1
 
-        text = font.render("Điểm: " + str(points), True, (0, 0, 0))
+        text = font.render("Điểm: " + str(points), True, (0, 255, 0))
         textRect = text.get_rect()
         textRect.center = (1000, 40)
         SCREEN.blit(text, textRect)
@@ -194,7 +191,6 @@ def main():
         SCREEN.blit(BG, (x_pos_bg, y_pos_bg))
         SCREEN.blit(BG, (image_width + x_pos_bg, y_pos_bg))
         if x_pos_bg <= -image_width:
-            SCREEN.blit(BG, (image_width + x_pos_bg, y_pos_bg))
             x_pos_bg = 0
         x_pos_bg -= game_speed
 
@@ -203,7 +199,13 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
 
-        SCREEN.fill((255, 255, 255))
+        if day_night_cycle % 2 == 0:
+            SCREEN.fill((255, 255, 255))
+        else:
+            SCREEN.fill((0, 0, 0)) 
+
+        if points >= 500:
+            day_night_cycle = (points // 500) % 2
         userInput = pygame.key.get_pressed()
 
         player.draw(SCREEN)
@@ -235,33 +237,58 @@ def main():
         clock.tick(30)
         pygame.display.update()
 
-
 def menu(death_count):
     global points
     run = True
-    while run:
-        SCREEN.fill((255, 255, 255))
-        font = pygame.font.Font('Roboto-Bold.ttf', 30)
+    button_start_rect = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 50, 200, 50)  # Nút bắt đầu
+    button_exit_rect = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 120, 200, 50)  # Nút thoát
 
+    while run:
+        SCREEN.fill((255, 255, 255))  # Làm mới màn hình với màu trắng
+        font = pygame.font.Font('Roboto-Bold.ttf', 30)  # Phông chữ cho menu
+
+        # Nếu đây là lần chơi đầu tiên
         if death_count == 0:
-            text = font.render("Nhấn phím bất kỳ để bắt đầu!", True, (0, 0, 0))
+            text = font.render("Thánh Long K'uhul Ajaw Toàn Năng!", True, (0, 0, 0))
+        # Nếu người chơi đã thua ít nhất 1 lần
         elif death_count > 0:
-            text = font.render("Nhấn phím bất kỳ để chơi lại", True, (0, 0, 0))
-            score = font.render("Điểm của bạn: " + str(points), True, (0, 0, 0))
+            text = font.render("Nhấn nút bên dưới để chơi lại", True, (0, 0, 0))
+            score = font.render("Điểm của bạn: " + str(points), True, (0, 0, 0))  # Hiển thị điểm
             scoreRect = score.get_rect()
-            scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)
+            scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 40)  # Vị trí của điểm
             SCREEN.blit(score, scoreRect)
+
+        # Vẽ thông báo trên màn hình
         textRect = text.get_rect()
-        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)  # Vị trí của thông báo
         SCREEN.blit(text, textRect)
-        SCREEN.blit(RUNNING[0], (SCREEN_WIDTH // 2 - 20, SCREEN_HEIGHT // 2 - 140))
-        pygame.display.update()
+
+        # Vẽ nút "Bắt đầu"
+        pygame.draw.rect(SCREEN, (0, 150, 0), button_start_rect)  # Vẽ hình chữ nhật cho nút
+        button_start_text = font.render("Bắt đầu", True, (255, 255, 255))  # Văn bản cho nút
+        button_start_text_rect = button_start_text.get_rect(center=button_start_rect.center)  # Vị trí văn bản
+        SCREEN.blit(button_start_text, button_start_text_rect)
+
+        # Vẽ nút "Thoát"
+        pygame.draw.rect(SCREEN, (150, 0, 0), button_exit_rect)  # Vẽ hình chữ nhật cho nút thoát
+        button_exit_text = font.render("Thoát", True, (255, 255, 255))  # Văn bản cho nút thoát
+        button_exit_text_rect = button_exit_text.get_rect(center=button_exit_rect.center)  # Vị trí văn bản
+        SCREEN.blit(button_exit_text, button_exit_text_rect)
+
+        SCREEN.blit(RUNNING[0], (SCREEN_WIDTH // 2 - 20, SCREEN_HEIGHT // 2 - 140))  # Vẽ khủng long trên menu
+        pygame.display.update()  # Cập nhật màn hình
+
+        # Kiểm tra sự kiện
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT:  # Thoát nếu nhấn nút thoát
                 pygame.quit()
                 run = False
-            if event.type == pygame.KEYDOWN:
-                main()
+            if event.type == pygame.MOUSEBUTTONDOWN:  # Kiểm tra nhấn chuột
+                if button_start_rect.collidepoint(event.pos):  # Bắt đầu trò chơi nếu nhấn nút bắt đầu
+                    main()
+                elif button_exit_rect.collidepoint(event.pos):  # Thoát trò chơi nếu nhấn nút thoát
+                    pygame.quit()
+                    run = False
 
-
+# Gọi menu với số lần chết ban đầu là 0
 menu(death_count=0)
