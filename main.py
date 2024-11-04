@@ -1,6 +1,7 @@
 import pygame
 import os
 import random
+from item import Item
 
 pygame.init()
 
@@ -34,7 +35,7 @@ class Dinosaur:
     Y_POS = 305
     Y_POS_DUCK = 330
     JUMP_VEL = 8.5
-    MOVE_VEL = 5
+    MOVE_VEL = 25
 
     def __init__(self):
         self.duck_img = DUCKING
@@ -44,6 +45,7 @@ class Dinosaur:
         self.dino_duck = False
         self.dino_run = True
         self.dino_jump = False
+        self.using_item = False
 
         self.step_index = 0
         self.jump_vel = self.JUMP_VEL
@@ -75,11 +77,19 @@ class Dinosaur:
             self.dino_duck = False
             self.dino_run = True
             self.dino_jump = False
+            
+        if self.using_item:
+            if userInput[pygame.K_LEFT]:
+                self.dino_rect.x -= self.MOVE_VEL  
+            if userInput[pygame.K_RIGHT]:
+                self.dino_rect.x += self.MOVE_VEL  
 
-        if userInput[pygame.K_LEFT]:
-            self.dino_rect.x -= self.MOVE_VEL
-        if userInput[pygame.K_RIGHT]:
-            self.dino_rect.x += self.MOVE_VEL
+    def activate_item(self):
+        self.using_item = True
+
+    def deactivate_item(self):
+        self.using_item = False
+
 
     def duck(self):
         self.image = self.duck_img[self.step_index // 5]
@@ -160,7 +170,7 @@ class Bird(Obstacle):
         self.index += 1
 
 def main():
-    global game_speed, x_pos_bg, y_pos_bg, points, obstacles
+    global game_speed, x_pos_bg, y_pos_bg, points, obstacles, item_visible
     run = True
     clock = pygame.time.Clock()
     player = Dinosaur()
@@ -173,12 +183,20 @@ def main():
     obstacles = []
     death_count = 0
     day_night_cycle = 0
-
+    item = Item()
+    item_active = False
+    item_start_time = 0
+    item_visible = False  
+    
     def score():
-        global points, game_speed
+        global points, game_speed, item_visible
         points += 1
         if points % 100 == 0:
             game_speed += 1
+            
+        if points % 200 == 0 and not item_visible:
+            item_visible = True
+            item.reset()  
 
         text = font.render("Điểm: " + str(points), True, (0, 255, 0))
         textRect = text.get_rect()
@@ -207,6 +225,23 @@ def main():
         if points >= 500:
             day_night_cycle = (points // 500) % 2
         userInput = pygame.key.get_pressed()
+
+
+        if item_visible:
+            item.update()
+            item.draw(SCREEN)
+
+            if player.dino_rect.colliderect(item.rect):
+                item.collect()
+                item_active = True
+                item_start_time = pygame.time.get_ticks()
+                player.activate_item()
+                item_visible = False 
+
+        if item_active:
+            if pygame.time.get_ticks() - item_start_time >= 2000:  
+                item_active = False
+                player.deactivate_item()
 
         player.draw(SCREEN)
         player.update(userInput)
