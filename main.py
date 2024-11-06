@@ -22,6 +22,9 @@ SMALL_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "SmallCactus1.pn
 LARGE_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus1.png")),
                 pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus2.png")),
                 pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus3.png"))]
+ROCK = [pygame.image.load(os.path.join("Assets/Rock", "Rock1.png")),
+         pygame.image.load(os.path.join("Assets/Rock", "Rock2.png")),
+         pygame.image.load(os.path.join("Assets/Rock", "Rock3.png"))]
 
 BIRD = [pygame.image.load(os.path.join("Assets/Bird", "Bird1.png")),
         pygame.image.load(os.path.join("Assets/Bird", "Bird2.png"))]
@@ -156,6 +159,12 @@ class LargeCactus(Obstacle):
         super().__init__(image, self.type)
         self.rect.y = 300
 
+class Rock(Obstacle):
+    def __init__(self, image):
+        self.type = random.randint(0, 2)      
+        super().__init__(image, self.type)      
+        self.rect.y = 395 - self.rect.height
+
 class Bird(Obstacle):
     def __init__(self, image):
         self.type = 0
@@ -253,6 +262,8 @@ def main():
                 obstacles.append(LargeCactus(LARGE_CACTUS))
             elif random.randint(0, 2) == 2:
                 obstacles.append(Bird(BIRD))
+            elif random.randint(0, 2) == 2:
+                obstacles.append(Rock(ROCK))
 
         for obstacle in obstacles:
             obstacle.draw(SCREEN)
