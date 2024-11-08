@@ -2,6 +2,7 @@ import pygame
 import os
 import random
 from item import Item
+from item import Gun
 
 pygame.init()
 
@@ -22,6 +23,10 @@ SMALL_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "SmallCactus1.pn
 LARGE_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus1.png")),
                 pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus2.png")),
                 pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus3.png"))]
+
+ROCK = [pygame.image.load(os.path.join("Assets/Rock", "Rock1.png")),
+         pygame.image.load(os.path.join("Assets/Rock", "Rock2.png")),
+         pygame.image.load(os.path.join("Assets/Rock", "Rock3.png"))]
 
 BIRD = [pygame.image.load(os.path.join("Assets/Bird", "Bird1.png")),
         pygame.image.load(os.path.join("Assets/Bird", "Bird2.png"))]
@@ -53,6 +58,26 @@ class Dinosaur:
         self.dino_rect = self.image.get_rect()
         self.dino_rect.x = self.X_POS
         self.dino_rect.y = self.Y_POS
+        
+        self.can_shoot = False  # Trạng thái có thể bắn
+        self.last_shot_time = 0  # Thời gian bắn lần cuối
+        self.shoot_cooldown = 500  # Thời gian cooldown (500 ms)
+        self.bullet_list = []  # Danh sách các viên đạn
+
+        self.is_shooting = False  # Trạng thái có đang bắn đạn hay không
+
+    def shoot(self):
+        "Bắn một viên đạn mỗi lần nhấn, chỉ khi có thể bắn."
+        if self.can_shoot:
+            bullet = Bullet(self.dino_rect.right, self.dino_rect.centery)  # Tạo viên đạn mới
+            self.bullet_list.append(bullet)  # Thêm viên đạn vào danh sách
+            self.can_shoot = False  # Vô hiệu hóa khả năng bắn ngay sau khi bắn
+
+    def activate_shooting(self):
+        """Kích hoạt khả năng bắn cho khủng long."""
+        self.can_shoot = True
+
+
 
     def update(self, userInput):
         if self.dino_duck:
@@ -82,7 +107,13 @@ class Dinosaur:
             if userInput[pygame.K_LEFT]:
                 self.dino_rect.x -= self.MOVE_VEL  
             if userInput[pygame.K_RIGHT]:
-                self.dino_rect.x += self.MOVE_VEL  
+                self.dino_rect.x += self.MOVE_VEL
+                
+            if self.dino_rect.x < 0:
+                self.dino_rect.x = 0
+            if self.dino_rect.x > SCREEN_WIDTH - self.dino_rect.width:
+                self.dino_rect.x = SCREEN_WIDTH - self.dino_rect.width
+  
 
     def activate_item(self):
         self.using_item = True
@@ -156,6 +187,13 @@ class LargeCactus(Obstacle):
         super().__init__(image, self.type)
         self.rect.y = 300
 
+class Rock(Obstacle):
+    def __init__(self, image):
+        self.type = random.randint(0, 2)      
+        super().__init__(image, self.type)      
+        self.rect.y = 395 - self.rect.height
+
+
 class Bird(Obstacle):
     def __init__(self, image):
         self.type = 0
@@ -168,6 +206,23 @@ class Bird(Obstacle):
             self.index = 0
         SCREEN.blit(self.image[self.index//5], self.rect)
         self.index += 1
+
+class Bullet:
+    def __init__(self, x, y):
+        self.image = pygame.image.load("Assets/Other/Bullet.png")
+        # Thay đổi kích thước viên đạn, bạn có thể điều chỉnh (width, height) theo mong muốn
+        new_width = int(self.image.get_width() * 0.05)  # Giảm kích thước còn 50%
+        new_height = int(self.image.get_height() * 0.05 )
+        self.image = pygame.transform.scale(self.image, (new_width, new_height))
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+
+    def update(self):
+        self.rect.x += 20  # Tốc độ di chuyển của viên đạn
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+
 
 def main():
     global game_speed, x_pos_bg, y_pos_bg, points, obstacles, item_visible
@@ -187,6 +242,11 @@ def main():
     item_active = False
     item_start_time = 0
     item_visible = False  
+    
+    gun = Gun()  # Đảm bảo lớp Gun đã được định nghĩa đúng
+    gun_visible = False  # Biến để kiểm soát hiển thị Gun
+    gun_spawned = False  # Kiểm tra nếu gun đã xuất hiện chưa
+    gun_reset_time = 0  # Thời gian reset gun sau khi nhặt
     
     def score():
         global points, game_speed, item_visible
@@ -217,6 +277,10 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
 
+        userInput = pygame.key.get_pressed()
+        if userInput[pygame.K_SPACE] and player.can_shoot:
+            player.shoot()
+
         if day_night_cycle % 2 == 0:
             SCREEN.fill((255, 255, 255))
         else:
@@ -226,6 +290,10 @@ def main():
             day_night_cycle = (points // 500) % 2
         userInput = pygame.key.get_pressed()
 
+        if points % random.randint(200, 500) == 0 and not gun_visible:  # Mỗi 200-500 điểm
+            if random.randint(0, 99) < 90:  # 30% tỉ lệ xuất hiện súng
+                gun.reset()  # Đặt lại vị trí của Gun
+                gun_visible = True  # Hiển thị súng
 
         if item_visible:
             item.update()
@@ -239,9 +307,46 @@ def main():
                 item_visible = False 
 
         if item_active:
-            if pygame.time.get_ticks() - item_start_time >= 2000:  
+            elapsed_time = pygame.time.get_ticks() - item_start_time
+            remaining_time = max(0, 4000 - elapsed_time) // 1000  # Chuyển đổi sang giây
+
+            time_text = font.render(f"Item Time: {remaining_time}s", True, (255, 0, 0))
+            SCREEN.blit(time_text, (10, 10))
+
+            if elapsed_time >= 2000:
                 item_active = False
                 player.deactivate_item()
+
+        # Cập nhật và vẽ Gun nếu hiển thị
+        if gun_visible:
+            gun.update()
+            gun.draw(SCREEN)
+         # Kiểm tra va chạm với khủng long
+            if player.dino_rect.colliderect(gun.rect):
+                gun.collect()  # Phương thức để xử lý khi Gun được thu thập
+                player.activate_shooting()  # Kích hoạt khả năng bắn cho khủng long
+                gun_visible = False  # Ẩn Gun sau khi thu thập  
+
+          # Kiểm tra thời gian reset gun
+        if gun_reset_time > 0 and pygame.time.get_ticks() - gun_reset_time >= 5000:  # 5 giây sau khi thu thập
+            gun_visible = False  # Ẩn gun sau khi đã xuất hiện đủ lâu
+            gun_spawned = False  # Reset lại trạng thái súng sau một thời gian       
+
+        # Cập nhật và vẽ đạn
+        for bullet in player.bullet_list:
+            bullet.update()
+            bullet.draw(SCREEN)
+
+        # Kiểm tra va chạm giữa đạn và chướng ngại vật
+            for obstacle in obstacles[:]:
+                if bullet.rect.colliderect(obstacle.rect):
+                    player.bullet_list.remove(bullet)  # Xóa đạn khi va chạm
+                    obstacles.remove(obstacle)  # Xóa chướng ngại vật khi va chạm
+                    break  # Dừng vòng lặp khi đạn va chạm với một chướng ngại vật
+
+            # Xóa đạn khi ra khỏi màn hình
+            if bullet.rect.x > SCREEN_WIDTH:
+                player.bullet_list.remove(bullet)
 
         player.draw(SCREEN)
         player.update(userInput)
@@ -251,8 +356,11 @@ def main():
                 obstacles.append(SmallCactus(SMALL_CACTUS))
             elif random.randint(0, 2) == 1:
                 obstacles.append(LargeCactus(LARGE_CACTUS))
+                
             elif random.randint(0, 2) == 2:
                 obstacles.append(Bird(BIRD))
+            elif random.randint(0, 2) == 2:
+                obstacles.append(Rock(ROCK))
 
         for obstacle in obstacles:
             obstacle.draw(SCREEN)
