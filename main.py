@@ -40,6 +40,7 @@ JUMP_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds", "jump.mp3"))
 DIE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds", "die.mp3"))
 CHECKPOINT_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds", "point.mp3"))
 ITEM_COLLECT_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds", "item_collect.mp3"))
+BOOM_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds", "ex.mp3"))
 
 SPIKES = [pygame.image.load(os.path.join("Assets/Spikes", "spikes1.png")),
           pygame.image.load(os.path.join("Assets/Spikes", "spikes2.png")),
@@ -256,7 +257,12 @@ def main():
     font = pygame.font.Font('Roboto-bold.ttf', 20)
     obstacles = []
     death_count = 0
+    
+    # Thiết lập biến cho chu kỳ ngày/đêm, độ sáng và tốc độ chuyển đổi
     day_night_cycle = 0
+    current_brightness = 255  # Độ sáng bắt đầu (255 là sáng nhất - ban ngày)
+    transition_speed = 2  # Tốc độ chuyển đổi, có thể điều chỉnh tăng/giảm để tăng/giảm độ mượt
+    
     item = Item()
     item_active = False
     item_start_time = 0
@@ -266,6 +272,8 @@ def main():
     gun_visible = False  # Biến để kiểm soát hiển thị Gun
     gun_spawned = False  # Kiểm tra nếu gun đã xuất hiện chưa
     gun_reset_time = 0  # Thời gian reset gun sau khi nhặt
+    
+    paused = False
     
     def score():
         global points, game_speed, item_visible
@@ -298,19 +306,38 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:  # Nhấn P để tạm dừng hoặc tiếp tục
+                    paused = not paused
+        
+        if paused:
+            # Hiển thị thông báo "Tạm dừng"
+            pause_text = font.render("Tạm dừng - Nhấn P để tiếp tục", True, (255, 0, 0))
+            pause_text_rect = pause_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+            SCREEN.blit(pause_text, pause_text_rect)
+            pygame.display.update()
+            clock.tick(5)  # Giảm tốc độ cập nhật màn hình để tiết kiệm tài nguyên khi tạm dừng
+            continue
+        
         userInput = pygame.key.get_pressed()
         if userInput[pygame.K_SPACE] and player.can_shoot:
             player.shoot()
 
+        # Trong vòng lặp game, cập nhật màu nền:
         if day_night_cycle % 2 == 0:
-            SCREEN.fill((255, 255, 255))
+        # Chu kỳ ngày - chuyển từ tối sang sáng
+            if current_brightness < 255:  # Nếu chưa đạt độ sáng tối đa
+                current_brightness += transition_speed  # Tăng dần độ sáng
         else:
-            SCREEN.fill((0, 0, 0)) 
+        # Chu kỳ đêm - chuyển từ sáng sang tối
+            if current_brightness > 0:  # Nếu chưa đạt độ tối đa
+                current_brightness -= transition_speed  # Giảm dần độ sáng
+        # Đặt màu nền dựa trên độ sáng hiện tại
+        SCREEN.fill((current_brightness, current_brightness, current_brightness))
+        # Kiểm tra và thay đổi chu kỳ ngày/đêm dựa trên điểm của người chơi
+        if points >= 500:  # Khi điểm đạt đến 500 hoặc hơn, bắt đầu chu kỳ thay đổi ngày/đêm
+            day_night_cycle = (points // 500) % 2  # Cập nhật chu kỳ ngày/đêm mỗi 500 điểm
 
-        if points >= 500:
-            day_night_cycle = (points // 500) % 2
-        userInput = pygame.key.get_pressed()
 
         if points % random.randint(200, 500) == 0 and not gun_visible:  # Mỗi 200-500 điểm
             if random.randint(0, 99) < 90:  # 30% tỉ lệ xuất hiện súng
@@ -363,6 +390,7 @@ def main():
         # Kiểm tra va chạm giữa đạn và chướng ngại vật
             for obstacle in obstacles[:]:
                 if bullet.rect.colliderect(obstacle.rect):
+                    BOOM_SOUND.play()
                     player.bullet_list.remove(bullet)  # Xóa đạn khi va chạm
                     obstacles.remove(obstacle)  # Xóa chướng ngại vật khi va chạm
                     break  # Dừng vòng lặp khi đạn va chạm với một chướng ngại vật
