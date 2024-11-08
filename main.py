@@ -4,6 +4,7 @@ import random
 from item import Item
 
 pygame.init()
+pygame.mixer.init()
 
 SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 1100
@@ -32,6 +33,15 @@ BIRD = [pygame.image.load(os.path.join("Assets/Bird", "Bird1.png")),
 CLOUD = pygame.image.load(os.path.join("Assets/Other", "Cloud.png"))
 
 BG = pygame.image.load(os.path.join("Assets/Other", "Track.png"))
+
+JUMP_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds", "jump.mp3"))
+DIE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds", "die.mp3"))
+CHECKPOINT_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds", "point.mp3"))
+ITEM_COLLECT_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds", "item_collect.mp3"))
+
+SPIKES = [pygame.image.load(os.path.join("Assets/Spikes", "spikes1.png")),
+          pygame.image.load(os.path.join("Assets/Spikes", "spikes1.png")),
+          pygame.image.load(os.path.join("Assets/Spikes", "spikes1.png"))]
 
 class Dinosaur:
     X_POS = 80
@@ -107,6 +117,8 @@ class Dinosaur:
     def jump(self):
         self.image = self.jump_img
         if self.dino_jump:
+            if self.dino_rect.y == self.Y_POS:
+                JUMP_SOUND.play()
             self.dino_rect.y -= self.jump_vel * 4
             self.jump_vel -= 0.8
         if self.jump_vel < -self.JUMP_VEL:
@@ -165,6 +177,11 @@ class Rock(Obstacle):
         super().__init__(image, self.type)      
         self.rect.y = 395 - self.rect.height
 
+class Spikes(Obstacle):
+    def __init__(self, image):
+        self.type = random.randint(0, 2)
+        super().__init__(image, self.type)
+        self.rect.y = 315
 class Bird(Obstacle):
     def __init__(self, image):
         self.type = 0
@@ -177,7 +194,7 @@ class Bird(Obstacle):
             self.index = 0
         SCREEN.blit(self.image[self.index//5], self.rect)
         self.index += 1
-
+        
 def main():
     global game_speed, x_pos_bg, y_pos_bg, points, obstacles, item_visible
     run = True
@@ -200,7 +217,8 @@ def main():
     def score():
         global points, game_speed, item_visible
         points += 1
-        if points % 100 == 0:
+        if points % 1000 == 0:
+            CHECKPOINT_SOUND.play()
             game_speed += 1
             
         if points % 200 == 0 and not item_visible:
@@ -241,6 +259,7 @@ def main():
             item.draw(SCREEN)
 
             if player.dino_rect.colliderect(item.rect):
+                ITEM_COLLECT_SOUND.play()
                 item.collect()
                 item_active = True
                 item_start_time = pygame.time.get_ticks()
@@ -256,19 +275,23 @@ def main():
         player.update(userInput)
 
         if len(obstacles) == 0:
-            if random.randint(0, 2) == 0:
+            rand_num = random.randint(0, 4)
+            if rand_num == 0:
                 obstacles.append(SmallCactus(SMALL_CACTUS))
-            elif random.randint(0, 2) == 1:
+            elif rand_num == 1:
                 obstacles.append(LargeCactus(LARGE_CACTUS))
-            elif random.randint(0, 2) == 2:
+            elif rand_num == 2:
                 obstacles.append(Bird(BIRD))
-            elif random.randint(0, 2) == 2:
+            elif rand_num == 3:
+                obstacles.append(Spikes(SPIKES))
+            elif rand_num == 4:
                 obstacles.append(Rock(ROCK))
 
         for obstacle in obstacles:
             obstacle.draw(SCREEN)
             obstacle.update()
             if player.dino_rect.colliderect(obstacle.rect):
+                DIE_SOUND.play()
                 pygame.time.delay(2000)
                 death_count += 1
                 menu(death_count)
