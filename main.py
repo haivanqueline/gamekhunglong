@@ -40,8 +40,8 @@ CHECKPOINT_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds", "point.mp3")
 ITEM_COLLECT_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds", "item_collect.mp3"))
 
 SPIKES = [pygame.image.load(os.path.join("Assets/Spikes", "spikes1.png")),
-          pygame.image.load(os.path.join("Assets/Spikes", "spikes1.png")),
-          pygame.image.load(os.path.join("Assets/Spikes", "spikes1.png"))]
+          pygame.image.load(os.path.join("Assets/Spikes", "spikes2.png")),
+          pygame.image.load(os.path.join("Assets/Spikes", "spikes3.png"))]
 
 class Dinosaur:
     X_POS = 80
@@ -182,6 +182,7 @@ class Spikes(Obstacle):
         self.type = random.randint(0, 2)
         super().__init__(image, self.type)
         self.rect.y = 315
+        
 class Bird(Obstacle):
     def __init__(self, image):
         self.type = 0
