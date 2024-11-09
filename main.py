@@ -259,10 +259,10 @@ def main():
     obstacles = []
     death_count = 0
     
-    # Thiết lập biến cho chu kỳ ngày/đêm, độ sáng và tốc độ chuyển đổi
+     # Thiết lập biến cho chu kỳ ngày/đêm, độ sáng và tốc độ chuyển đổi
     day_night_cycle = 0
     current_brightness = 255  # Độ sáng bắt đầu (255 là sáng nhất - ban ngày)
-    transition_speed = 2  # Tốc độ chuyển đổi, có thể điều chỉnh tăng/giảm để tăng/giảm độ mượt
+    transition_speed = 3  # Tốc độ chuyển đổi, có thể điều chỉnh tăng/giảm để tăng/giảm độ mượt
     
     item = Item()
     item_active = False
