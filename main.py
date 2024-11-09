@@ -71,6 +71,8 @@ class Dinosaur:
         self.dino_rect.x = self.X_POS
         self.dino_rect.y = self.Y_POS
         
+        self.dino_rect.inflate_ip(-40, -40)
+        
         self.can_shoot = False  # Trạng thái có thể bắn
         self.last_shot_time = 0  # Thời gian bắn lần cuối
         self.shoot_cooldown = 500  # Thời gian cooldown (500 ms)
@@ -258,7 +260,7 @@ def main():
     obstacles = []
     death_count = 0
     
-     # Thiết lập biến cho chu kỳ ngày/đêm, độ sáng và tốc độ chuyển đổi
+    # Thiết lập biến cho chu kỳ ngày/đêm, độ sáng và tốc độ chuyển đổi
     day_night_cycle = 0
     current_brightness = 255  # Độ sáng bắt đầu (255 là sáng nhất - ban ngày)
     transition_speed = 3  # Tốc độ chuyển đổi, có thể điều chỉnh tăng/giảm để tăng/giảm độ mượt
