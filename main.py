@@ -70,7 +70,8 @@ class Dinosaur:
         self.dino_rect = self.image.get_rect()
         self.dino_rect.x = self.X_POS
         self.dino_rect.y = self.Y_POS
-        
+        self.dino_rect.inflate_ip(-40, -40)
+
         self.can_shoot = False  # Trạng thái có thể bắn
         self.last_shot_time = 0  # Thời gian bắn lần cuối
         self.shoot_cooldown = 500  # Thời gian cooldown (500 ms)
@@ -249,7 +250,7 @@ def main():
     run = True
     clock = pygame.time.Clock()
     player = Dinosaur()
-    cloud = Cloud()
+    clouds = [Cloud() for _ in range(8)]
     game_speed = 20
     x_pos_bg = 0
     y_pos_bg = 370
@@ -426,8 +427,9 @@ def main():
 
         background()
 
-        cloud.draw(SCREEN)
-        cloud.update()
+        for cloud in clouds:
+            cloud.draw(SCREEN)
+            cloud.update()
 
         score()
 
