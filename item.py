@@ -3,7 +3,7 @@ import random
 
 class Item:
     def __init__(self):
-        self.image = pygame.image.load("Assets/Other/Reset.png")  # Đường dẫn đến hình ảnh item
+        self.image = pygame.image.load("Assets/Other/Chicken.png")  # Đường dẫn đến hình ảnh item
         self.rect = self.image.get_rect()
         self.reset()  # Gọi phương thức reset để khởi tạo vị trí
 
